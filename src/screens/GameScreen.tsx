@@ -53,7 +53,7 @@ const GameScreen: React.FC = () => {
         // Check if player has valid moves
         const validMoves = getValidMoves(newState, diceValue);
         if (validMoves.length === 0) {
-          // Auto-advance to next player
+          // Auto-advance to next player immediately
           return autoAdvancePlayer(newState, diceValue);
         }
         
@@ -71,7 +71,8 @@ const GameScreen: React.FC = () => {
 
     // Move the token
     const newState = moveToken(gameState, tokenIndex, gameState.diceValue);
-    setGameState(newState);
+    // Reset dice value after move so next player can roll
+    setGameState({ ...newState, diceValue: null });
     setSelectedToken(null);
   }, [gameState, currentPlayer]);
 
@@ -148,19 +149,19 @@ const GameScreen: React.FC = () => {
   };
 
   const getCellType = (row: number, col: number): string => {
-    // Base areas
+    // Base areas (4 corners)
     if (row >= 1 && row <= 4 && col >= 1 && col <= 4) return 'BASE_RED';
     if (row >= 1 && row <= 4 && col >= 10 && col <= 13) return 'BASE_GREEN';
     if (row >= 10 && row <= 13 && col >= 10 && col <= 13) return 'BASE_YELLOW';
     if (row >= 10 && row <= 13 && col >= 1 && col <= 4) return 'BASE_BLUE';
 
-    // Home paths
+    // Home paths (leading to center)
     if (row === 7 && col >= 1 && col <= 5) return 'HOME_RED';
     if (col === 7 && row >= 1 && row <= 5) return 'HOME_GREEN';
     if (row === 7 && col >= 9 && col <= 13) return 'HOME_YELLOW';
     if (col === 7 && row >= 9 && row <= 13) return 'HOME_BLUE';
 
-    // Center
+    // Center (3x3)
     if (row >= 6 && row <= 8 && col >= 6 && col <= 8) return 'CENTER';
 
     // Main path
@@ -170,13 +171,13 @@ const GameScreen: React.FC = () => {
   const getCellColor = (row: number, col: number, cellType: string): string => {
     switch (cellType) {
       case 'BASE_RED':
-        return '#FFCDD2';
+        return '#FFEBEE';
       case 'BASE_GREEN':
-        return '#C8E6C9';
+        return '#E8F5E9';
       case 'BASE_YELLOW':
-        return '#FFF9C4';
+        return '#FFFDE7';
       case 'BASE_BLUE':
-        return '#BBDEFB';
+        return '#E3F2FD';
       case 'HOME_RED':
         return PLAYER_COLORS.RED;
       case 'HOME_GREEN':
@@ -186,9 +187,16 @@ const GameScreen: React.FC = () => {
       case 'HOME_BLUE':
         return PLAYER_COLORS.BLUE;
       case 'CENTER':
+        // Center triangle pattern
+        if (row === 7 && col === 7) return '#fff';
+        if (row === 6 && col === 6) return PLAYER_COLORS.RED;
+        if (row === 6 && col === 8) return PLAYER_COLORS.GREEN;
+        if (row === 8 && col === 6) return PLAYER_COLORS.BLUE;
+        if (row === 8 && col === 8) return PLAYER_COLORS.YELLOW;
         return '#fff';
       case 'PATH':
-        return '#f5f5f5';
+        // Alternate colors for path cells to create checkerboard pattern
+        return (row + col) % 2 === 0 ? '#fff' : '#f5f5f5';
       default:
         return '#fff';
     }
@@ -291,80 +299,109 @@ const GameScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#0f0f23',
   },
   playerInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   playerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   playerIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   playerText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   diceResult: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#FFD700',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   boardContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 10,
+    padding: 15,
   },
   board: {
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 15,
     position: 'relative',
+    borderWidth: 3,
+    borderColor: '#333',
   },
   cell: {
     position: 'absolute',
     borderWidth: 0.5,
-    borderColor: 'rgba(0,0,0,0.1)',
+    borderColor: 'rgba(0,0,0,0.15)',
   },
   safeMarker: {
     position: 'absolute',
-    fontSize: 12,
+    fontSize: 14,
     color: '#FFD700',
     top: '50%',
     left: '50%',
-    marginTop: -6,
-    marginLeft: -6,
+    marginTop: -7,
+    marginLeft: -7,
+    fontWeight: 'bold',
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   tokenContainer: {
     position: 'absolute',
-    transform: [{ translateX: -12 }, { translateY: -12 }],
+    transform: [{ translateX: -15 }, { translateY: -15 }],
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
-    padding: 10,
+    padding: 12,
+    paddingHorizontal: 24,
     backgroundColor: '#e94560',
-    borderRadius: 10,
+    borderRadius: 25,
+    shadowColor: '#e94560',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   backButtonText: {
     color: '#fff',
@@ -375,20 +412,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   statItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 8,
+    borderRadius: 12,
   },
   statIndicator: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    marginRight: 8,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   statText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#fff',
     fontWeight: 'bold',
   },

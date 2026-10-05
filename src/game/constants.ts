@@ -32,7 +32,7 @@ export const GAME_MODES = {
 } as const;
 export type GameMode = typeof GAME_MODES[keyof typeof GAME_MODES];
 
-// Safe cells (where tokens cannot be captured)
+// Safe cells (where tokens cannot be captured) - based on main path indices
 export const SAFE_CELLS = [0, 8, 13, 21, 26, 34, 39, 47];
 
 // Starting positions for each player on the main path

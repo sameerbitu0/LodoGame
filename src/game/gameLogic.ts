@@ -112,21 +112,21 @@ export function moveToken(
     // Token on board or in home - move forward
     token.stepsTaken += diceValue;
 
-    // Check if token enters home path
-    const stepsToHomeEntry = 50; // Steps needed to reach home entry
+    // Check if token enters home path (after 50 steps on main path)
+    const stepsToHomeEntry = 50;
     if (token.stepsTaken > stepsToHomeEntry) {
       token.state = TokenState.IN_HOME;
       const homeSteps = token.stepsTaken - stepsToHomeEntry - 1;
       token.position = homeSteps;
+      
+      // Check if token reached finish (position 5 in home path is center)
+      if (homeSteps === 5) {
+        token.state = TokenState.FINISHED;
+      }
     } else {
-      // Update position on main path
+      // Update position on main path - calculate from starting position
       const startPos = START_POSITIONS[currentPlayer];
       token.position = (startPos + token.stepsTaken) % MAIN_PATH.length;
-    }
-
-    // Check if token reached finish
-    if (token.stepsTaken === 56) {
-      token.state = TokenState.FINISHED;
     }
   }
 
@@ -202,7 +202,7 @@ export function autoAdvancePlayer(gameState: GameState, diceValue: DiceValue): G
   return {
     ...gameState,
     currentPlayerIndex: nextPlayerIndex,
-    diceValue,
+    diceValue: null, // Reset dice for next player
   };
 }
 
